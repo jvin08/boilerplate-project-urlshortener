@@ -40,22 +40,24 @@ app.post("/api/shorturl/new", (req, res) => {
   dns.lookup(url, (err)=> {
     if(err){
       return res.json({"error":"invalid URL"})
-    } else {
-      var short = Math.floor(Math.random()*100000).toString();
-                   var data = new shortUrl({
-                     originalUrl: url,
-                     shorterUrl: short
+    } else { 
+      // var short = Math.floor(Math.random()*100000).toString();
+      //              var data = new shortUrl({
+      //                originalUrl: url,
+      //                shorterUrl: short
+      //       })
+      //              data.save((err)=> {
+      //           if(err) {
+      //               return res.send("Error saving to Data Base")
+      //           } else {
+      //             console.log('data was saved')
+      //           }
+      //       })
+      // var jsonObj = {"original_url": data.originalUrl, "short_url":data.shorterUrl}
+      // res.send(jsonObj)
+      findOneOrCreateOne(url, function (newShortId) {
+                res.json({ "original_url": url, "short_url": newShortId });
             })
-                   data.save((err)=> {
-                if(err) {
-                    console.log("Error saving to Data Base")
-                    return res.send("Error saving to Data Base")
-                } else {
-                  console.log('data was saved')
-                }
-            })
-      var jsonObj = {"original_url": data.originalUrl, "short_url":data.shorterUrl}
-      res.send(jsonObj)
     }
   })
   });
@@ -79,7 +81,22 @@ app.get('/api/shorturl/:urlToForward', (req,res,next)=> {
   })
 })
 
-
+//Find in db match if not found create one
+function findOneOrCreateOne (originalUrl, callback) {
+  shortUrl.findOne({originalUrl:originalUrl}, (err, data)=>{
+                   if(data !== null){
+                     callback(data.shorterUrl)
+                   } else {    
+      var short = Math.floor(Math.random()*100000).toString();
+      var data = new shortUrl({
+                     originalUrl: originalUrl,
+                     shorterUrl: short
+      })
+      data.save()
+      callback(data.shorterUrl)    
+                   }
+      })
+}
 
 
 
